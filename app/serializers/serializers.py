@@ -1,7 +1,8 @@
+
 from pydantic import UUID4
 
 from app.db.models import Category, Product
-from app.serializers._s_parents import BaseSchema, BaseAttrs, Edit
+from app.serializers._s_parents import BaseAttrs, BaseSchema, Edit
 
 
 class ProductSchema(BaseSchema, BaseAttrs):
