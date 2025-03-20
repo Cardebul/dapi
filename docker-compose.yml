@@ -1,0 +1,21 @@
+volumes:
+  pg_data:
+
+services:
+  pg:
+    image: postgres:latest
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    restart: on-failure
+
+  service:
+    env_file: .env
+    image: base
+    command: ["python", "-m", "run"]
+    depends_on:
+      - pg
+    restart: on-failure
+    ports:
+      - 8000:8000
+
