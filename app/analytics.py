@@ -22,7 +22,7 @@ async def get_sales_total():
     start, end, _ = query_parser(request)
     async with async_session() as session:
         stmt = (
-            select(func.sum(Sale.quantity * Product.price))
+            select(func.sum((Sale.quantity * Product.price) * ((100 -Sale.discount) * 0.01)))
             .join(Product, Sale.product_id == Product.id)
             .where(Sale.sale_date.between(start, end))
         )
@@ -43,7 +43,7 @@ async def get_top_products():
                 Product.category_id.label('category_id'),
                 Product.name.label('name'),
                 func.sum(Sale.quantity).label('total_quantity'),
-                func.sum(Sale.quantity * Product.price).label('total_sum')
+                func.sum((Sale.quantity * Product.price) * ((100 -Sale.discount) * 0.01)).label('total_sum')
             )
             .join(Sale, Product.id == Sale.product_id)
             .where(Sale.quantity >= 0, Sale.sale_date.between(start, end))

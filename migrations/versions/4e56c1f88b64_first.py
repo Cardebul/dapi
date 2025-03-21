@@ -53,6 +53,7 @@ def _base_data_insert(sales_min = 7, sales_max = 255):
                 **base_gen(),
                 'product_id': product['id'],
                 'quantity': randint(1, 20),
+                'discount': randint(1, 99),
                 'sale_date': sale_date
             })
 
@@ -85,6 +86,7 @@ def upgrade() -> None:
     )
     op.create_table('sale',
     sa.Column('quantity', sa.Integer(), nullable=False),
+    sa.Column('discount', sa.Float(), nullable=False, default=0),
     sa.Column('sale_date', sa.DateTime(), nullable=False),
     sa.Column('product_id', sa.Uuid(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),

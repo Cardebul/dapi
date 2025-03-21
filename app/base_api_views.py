@@ -44,23 +44,17 @@ class ItemAPI(MethodView):
             if fk_exc := await self.validator.fk_inner_validation(ret, session): return jsonify(fk_exc), 404
             for k, v in ret.model_dump().items(): setattr(item, k, v)
             await session.commit()
-            return jsonify(self.view_validator.get_one(item)), 201
+        return jsonify(self.validator.get_one(item)), 200
 
     async def delete(self, id):
-        async with async_session() as session:
-            item = await self._get_item(id, session=session)
-            await session.delete(item)
-            await session.commit()
-            return "", 204
-        
-    # async def delete_product(product_id):
-    #     async with async_session() as session:
-    #         if not (await session.get(Product, product_id)): return jsonify('invalid product'), 404
-    #         sales = await session.execute(select(Sale).where(Sale.product_id == product_id))
-    #         if sales: return jsonify('sales found'), 400
-    #         await session.execute(delete(Product).where(Product.id == product_id))
-    #         await session.commit()
-    #     return jsonify(), 204
+        try:
+            async with async_session() as session:
+                item = await self._get_item(id, session=session)
+                await session.delete(item)
+                await session.commit()
+                return "", 204
+        except Exception as e: return jsonify(f'{e}'), 500
+
 
 
 class GroupAPI(MethodView):
