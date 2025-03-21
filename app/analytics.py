@@ -17,18 +17,22 @@ def query_parser(request, limit=False) -> tuple[dt, dt, Optional[int]]:
     except (KeyError, ValueError) as e: abort(400, f'invalid q params {e}')
 
 @analytics_api.get('/total')
-@cache.cached()
+@cache.cached(query_string=True)
 async def get_sales_total():
     start, end, _ = query_parser(request)
     async with async_session() as session:
-        stmt = (select(func.sum(Sale.quantity).filter(Sale.sale_date.between(start, end))))
+        stmt = (
+            select(func.sum(Sale.quantity * Product.price))
+            .join(Product, Sale.product_id == Product.id)
+            .where(Sale.sale_date.between(start, end))
+        )
         result = await session.execute(stmt)
         total = result.scalars().all()
         return total, 200
-        
+
 
 @analytics_api.get('/top-products')
-@cache.cached()
+@cache.cached(query_string=True)
 async def get_top_products():
     limit = None
     start, end, limit = query_parser(request, limit=True)
@@ -36,13 +40,12 @@ async def get_top_products():
         stmt = (
             select(
                 Product.id.label('id'),
-                Product.created_at.label('created_at'),
-                Product.updated_at.label('updated_at'),
                 Product.category_id.label('category_id'),
                 Product.name.label('name'),
-                func.sum(Sale.quantity).label('total_quantity')
+                func.sum(Sale.quantity).label('total_quantity'),
+                func.sum(Sale.quantity * Product.price).label('total_sum')
             )
-            .outerjoin(Sale, Product.id == Sale.product_id)
+            .join(Sale, Product.id == Sale.product_id)
             .where(Sale.quantity >= 0, Sale.sale_date.between(start, end))
             .group_by(Product.id)
             .order_by(func.sum(Sale.quantity).desc()).limit(limit)

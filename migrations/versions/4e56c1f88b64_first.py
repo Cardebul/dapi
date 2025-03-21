@@ -39,7 +39,7 @@ def _base_data_insert(sales_min = 7, sales_max = 255):
     products = []
     for category in categories:
         for product_name in PRODUCT_NAMES[category['name']]:
-            products.append({**base_gen(), 'name': product_name, 'category_id': category['id']})
+            products.append({**base_gen(), 'name': product_name, 'price': float(randint(500, 5000)),'category_id': category['id']})
 
     sales = []
     cur_date = dt.now()
@@ -75,6 +75,7 @@ def upgrade() -> None:
     )
     op.create_table('product',
     sa.Column('name', sa.String(length=255), nullable=False),
+    sa.Column('price', sa.Float(), nullable=False),
     sa.Column('category_id', sa.Uuid(), nullable=False),
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),

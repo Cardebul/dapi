@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime as dt
 from typing import List
 
-from sqlalchemy import DateTime, ForeignKey, String, Uuid, func
+from sqlalchemy import DateTime, ForeignKey, String, Uuid, Float, func
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -25,6 +25,7 @@ class Product(Base):
     __tablename__ = 'product'
 
     name: Mapped[str] = mapped_column(String(255), nullable=False)
+    price: Mapped[float] = mapped_column(Float(), nullable=False)
 
     category_id: Mapped[uuid.UUID] = mapped_column(ForeignKey('category.id', ondelete='CASCADE'), nullable=False)
     category: Mapped['Category'] = relationship(back_populates='products')
