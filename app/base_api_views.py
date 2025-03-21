@@ -4,6 +4,7 @@ from flask import Blueprint, abort, jsonify, request
 from flask.views import MethodView
 from sqlalchemy import select
 
+from app.config import cache
 from app.db.models import Product
 from app.db.session import async_session
 from app.serializers._utils import generate_validator
@@ -30,6 +31,7 @@ class ItemAPI(MethodView):
         async with async_session() as session:
             return self._ret(await session.get(self.model, id))
 
+    @cache.cached()
     async def get(self, id):
         item = await self._get_item(id)
         return jsonify(self.view_validator.get_one(item))
@@ -43,9 +45,6 @@ class ItemAPI(MethodView):
             for k, v in ret.model_dump().items(): setattr(item, k, v)
             await session.commit()
             return jsonify(self.view_validator.get_one(item)), 201
-
-    async def patch(self, id):
-        ...
 
     async def delete(self, id):
         async with async_session() as session:
@@ -72,6 +71,7 @@ class GroupAPI(MethodView):
         self.validator: BaseSchema = generate_validator(model, create=True)
         self.view_validator: BaseSchema = generate_validator(model)
 
+    @cache.cached()
     async def get(self):
         async with async_session() as session:
             result = await session.execute(select(self.model))

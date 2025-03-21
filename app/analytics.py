@@ -4,6 +4,7 @@ from typing import Optional
 from flask import Blueprint, abort, jsonify, request
 from sqlalchemy.sql import func, select
 
+from app.config import cache
 from app.db.models import Product, Sale
 from app.db.session import async_session
 
@@ -13,9 +14,10 @@ analytics_api = Blueprint('analytics', __name__, url_prefix='/api/sales')
 def query_parser(request, limit=False) -> tuple[dt, dt, Optional[int]]:
     a, tl, dstr = request.args, '%Y-%m-%d', dt.strptime
     try: return dstr(a['start_date'], tl), dstr(a['end_date'], tl), a['limit'] if limit else None
-    except (KeyError, ValueError) as e: abort(400, f'{e}')
+    except (KeyError, ValueError) as e: abort(400, f'invalid q params {e}')
 
 @analytics_api.get('/total')
+@cache.cached()
 async def get_sales_total():
     start, end, _ = query_parser(request)
     async with async_session() as session:
@@ -26,6 +28,7 @@ async def get_sales_total():
         
 
 @analytics_api.get('/top-products')
+@cache.cached()
 async def get_top_products():
     limit = None
     start, end, limit = query_parser(request, limit=True)
